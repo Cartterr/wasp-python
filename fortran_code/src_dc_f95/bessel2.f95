@@ -16,6 +16,7 @@ contains
    real(kind=8) :: aj0, aj1, aj2, x(ndis)  ! Ensure 'x' is declared as real(kind=8)
    real :: k, dk, z, pmax, omega, dw
    integer :: i, n, ix, kc, nfft2, nfft, nd_max
+   
    allocate(aj0s(dmax, fmax))
    allocate(aj1s(dmax, fmax))
    allocate(aj2s(dmax, fmax))
@@ -30,7 +31,27 @@ contains
    dw = twopi/(nfft*dt)
    omega=(nfft2-1)*dw
    pmax = 1.11
+
+   
+
    n=(sqrt(kc*kc+(pmax*omega)**2)-k)/dk
+   print *, "-------------------------------------------"
+   print *, "Calculating n in load_bessel"
+   print *, "In load_bessel - dk: ", dk, " kc: ", kc, " omega: ", omega, " pmax: ", pmax
+   print *, "Calculated n: ", n
+   print *, "n: ", n, " kc: ", kc, " pmax: ", pmax, " omega: ", omega
+   print *, "dw: ", dw, "nfft2: ", nfft2, "Omega: ", omega
+   
+
+   if (n > 0 .and. n <= fmax) then
+    ! Allocation and computation proceed
+   else
+      print *, "Error: Invalid n value", n
+      stop
+   endif
+   print *, "-------------------------------------------"
+   flush(0)
+   
    write(*,*)"maximum n is ",n
    if(n.gt.fmax)then
       write(*,*)n,fmax

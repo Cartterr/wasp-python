@@ -203,6 +203,11 @@ subroutine sub_bs_dc(nx, x, t0, green, disp, nt, ndis)
 !      write(0,'(a)') 'Input number of distance ranges to compute'
 !      read(*,*) nx
 !      write(*,*) nx
+   print *, "Inside sub_bs_dc"
+   print *, "nx: ", nx, " ndis: ", ndis
+   print *, "First value of x: ", x(1), " First value of t0: ", t0(1)
+   flush(0)
+
    if (nx.gt.ndis) then
       write(0,'(a)') 'Number of ranges exceeds the max. allowed'
       call exit(1)
@@ -260,11 +265,18 @@ subroutine sub_bs_dc(nx, x, t0, green, disp, nt, ndis)
             u_intermediary(ii, jj) = cmplx(real(u(ii, jj), kind=8), aimag(u(ii, jj)), kind=8)
          end do
       end do
+
+      if (n .le. 0) then
+         print *, "Warning: n is non-positive, setting n to 1"
+         n = 1
+      endif
+
       do i=1,n                                                      ! start k-loop
          call kernel(k, u_intermediary)
          do ix=1,nx
             z = k*x(ix)
             ixx = int(x(ix)/d_step + 0.001) + 1
+            
 !            call besselFn(z, aj0,aj1,aj2)
             aj0 = aj0s(ixx,i)
             aj1 = aj1s(ixx,i)

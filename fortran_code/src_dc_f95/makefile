@@ -58,6 +58,6 @@ layer.o: layer.f95
 %.o: %.f95
 	$(F77) -c $<
 
-clean:
-	rm -f *.mod
-	rm -f *.o
+#clean:
+#	rm -f *.mod
+#	rm -f *.o

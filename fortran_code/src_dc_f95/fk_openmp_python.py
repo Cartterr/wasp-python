@@ -4,6 +4,9 @@ import types
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+import time
+
+start_time = time.time()
 
 def check_fortran_functions_in_module(module, func_names):
     for attr_name in dir(module):
@@ -23,6 +26,7 @@ def check_fortran_functions_in_module(module, func_names):
 
 # Assuming fk_openmp_module is compiled and accessible, with necessary submodules
 sys.path.append('C:/Users/josec/Desktop/WASP/fortran_code/src_dc_f95/')
+sys.path.append('C:/Users/josec/OneDrive - Universidad Católica de Chile/IpreSimulaciones/wasp/wasp-python/fortran_code/src_dc_f95/')
 import fk_openmp_module
 
 # List of function names you expect to find in the submodules
@@ -80,7 +84,7 @@ def visualize_green_function(gf_bank_file, depth_index=0, distance_index=0, comp
     plt.plot(np.real(green_function))
     plt.xlabel('Time Sample')
     plt.ylabel('Amplitude')
-    plt.title(f'Green\'s Function Component {component_index+1} for Depth Index {depth_index} and Distance Index {distance_index}')
+    plt.title(f"Green/'s Function Component {component_index+1} for Depth Index {depth_index} and Distance Index {distance_index}")
     plt.grid(True)
     plt.show()
 
@@ -97,4 +101,11 @@ if __name__ == "__main__":
     # Create and visualize the mock Green's function bank
     create_mock_green_function_bank(dist_min, dist_max, d_step, dep_min, dep_max, dep_step, gf_bank_file)
     print(f"Mock Green's function bank saved to {gf_bank_file}.")
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Total execution time: {elapsed_time} seconds")
+    
     visualize_green_function(gf_bank_file, depth_index=0, distance_index=0, component_index=0)
+
+    

@@ -18,6 +18,7 @@ contains
    character(len=100) :: vel_model
    integer :: j
    vel_model = trim(vel_model)
+   print *, "Trying to open vel_model file at: ", trim(vel_model)
    open(1, file=vel_model, status='old')
    read(1, *) n_layers
    do j = 1, n_layers

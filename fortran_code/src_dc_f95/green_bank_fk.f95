@@ -14,8 +14,11 @@ program green_bank_fk
    use bessel2, only : load_bessel
    use fk, only : sub_bs_dc
    implicit none
-   real dist(ndis)
-   real t0(ndis),tmin(ndis),depth
+   real(kind=8) dist(ndis)
+   real(kind=8) t0(ndis)
+   real(kind=8) tmin(ndis)
+   real(kind=8) depth
+   real(kind=8) :: zero_real8 = 0.0d0
    real :: green(nt, 8, ndis)
    integer iz, k, ll, n_com, nd_max, npt, ntc, nx, nz
    logical :: disp
@@ -67,7 +70,7 @@ program green_bank_fk
       write(*,*)"please reduce the number of Green function"
       stop
    endif
-   open(11,file=gf_bank,status='unknown',access='direct',recl=block_gg)
+   open(11,file=gf_bank,status='unknown',access='direct',recl=block_gg) ! Crear archivo binar
 
    call read_vel_model(vel_model)
 
@@ -79,7 +82,7 @@ program green_bank_fk
    do iz=1,nz
       depth=dep_min + (iz-1)*dep_step
       write(*,*) depth
-      call update_model(depth,0.0)
+      call update_model(depth, zero_real8)
       call trav_fk(dist,tmin,nx)
       write(*,*)'t0: ', (tmin(k),k=1,20)
       do k=1,nx

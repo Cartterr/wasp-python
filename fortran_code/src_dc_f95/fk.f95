@@ -87,11 +87,13 @@ contains
    integer nCom,wc,wc1,wc2,smth,idx0,flip,new_old(9)
    real*8 :: k,omega,dk,dw,sigma,const,phi,hs,xmax,vs
    real*8 :: dfac,pmin,pmax,kc,taper,filter,z2
-   real x(ndis),t0(ndis)
+   real(kind=8) :: t0(ndis)
+   real(kind=8) x(ndis)
 !
    integer ixx
 !
-   complex :: nf1,nf2,u(3,3)
+   complex :: nf1,nf2
+   complex(kind=8) :: u(3,3)
    real aj0,aj1,aj2,z,tdata(2*nt)
 !
    complex, allocatable :: summ(:, :, :)
@@ -169,7 +171,7 @@ contains
    endif
    dw = twopi/(nfft*dt)
    sigma = sigma*dw/twopi
-   wc = nfft2*(1.d0-taper)
+   wc = int(nfft2*(1.d0-taper), kind=4)
    if (wc .LT. 1) wc=1
    taper = pi/(nfft2-wc+1)
    if (wc2.GT.wc) wc2=wc
@@ -213,7 +215,7 @@ contains
 
 !***************************************************************
 !*************** do wavenumber integration for each frequency
-   z = pmax*nfft2*dw/kc
+   z = real(pmax*nfft2*dw/kc, kind=4)  ! If precision loss is acceptable
    k = sqrt(z*z+1)
    total = nfft2*(kc/dk)*0.5*(k+log(k+z)/z)
 !   write(0,'(a3,f9.5,a8,f9.2,a8,i9)')'dk',dk,'kmax',kc,'N',total
@@ -245,16 +247,17 @@ contains
       k = omega*pmin + 0.5d0*dk
       n = (sqrt(kc+(pmax*omega)**2)-k)/dk                           ! kmax
       do i=1,n                                                      ! start k-loop
-         call kernel(k, u, ka, kb)
+         call kernel(k, u)
          do ix=1,nx
-            z = k*x(ix)
+            ! z = k*x(ix)
+            z = k*x(ix) * 1.0_double
 !            ixx = int(x(ix)/d_step + 0.001) + 1
             call besselFn(z, aj0,aj1,aj2)
 !            aj0 = aj0s(ixx,i)
 !            aj1 = aj1s(ixx,i)
 !            aj2 = aj2s(ixx,i)
 ! n=0
-            kahan_y(1,ix) = u(1,1)*aj0*flip
+            kahan_y(1,ix) = cmplx(u(1,1)*aj0*flip, kind=4)  ! If precision loss is acceptable
             kahan_y(2,ix) = - u(2,1)*aj1
             kahan_y(3,ix) = - u(3,1)*aj1
 !            summ(1,ix,j) = summ(1,ix,j) + u(1,1)*aj0*flip

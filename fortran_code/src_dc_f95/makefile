@@ -1,63 +1,33 @@
-##  If you want to change the size of GF bank, please just modify the size.h
+## If you want to change the size of GF bank, please just modify the size.h
 FFLAGS=-O
 MY_BIN=.
-F77=gfortran -ffixed-line-length-132 -mcmodel=medium -O2 -Wall -g#-fbacktrace -ffpe-trap=underflow,denormal
+F77=gfortran -ffixed-line-length-132 -mcmodel=medium -O2 -Wall -g
 # linux or Mac
+modules = constants.o retrieve_gf.o bessel2.o vel_model_data.o wave_travel.o fk_source.o haskell.o prop.o fk_kernel.o fk.o bessel.o layer.o fk_st_kernel.o st_haskell.o fft.o Complex.o 
 
-modules = constants.o retrieve_gf.o bessel2.o vel_model_data.o wave_travel.o fk_source.o haskell.o prop.o fk_kernel.o fk.o bessel.o $(SUBS)
-modules2 = constants.o retrieve_gf.o bessel2.o vel_model_data.o wave_travel.o layer.o fk_source.o haskell.o prop.o fk_kernel.o fk_openmp.o bessel.o $(SUBS)
-modules3 = constants.o retrieve_gf.o bessel2.o vel_model_data.o wave_travel.o layer.o fk_source.o st_haskell.o prop.o fk_st_kernel.o fk_static.o bessel.o $(SUBS)
 SUBS = fft.o Complex.o 
-all: green_bank_openmp gf_static clean 
 
+all: green_bank_fk
 
 green_bank_fk: $(modules) green_bank_fk.o
 	$(F77) -o $(MY_BIN)/green_bank_f95 $(modules) green_bank_fk.o
 
-green_bank_openmp: $(modules2) green_bank_fk_openmp.o
-	$(F77) -fopenmp -o $(MY_BIN)/green_bank_openmp_f95 $(modules2) green_bank_fk_openmp.o
-
-gf_static: $(modules3) geodesics.o rad_pattern.o gf_static.o
-	$(F77) -fopenmp -o $(MY_BIN)/gf_static_f95 $(modules3) geodesics.o rad_pattern.o gf_static.o
-
-
-fk_openmp.mod: fk_openmp.o fk_openmp.f95
-	$(F77) -fopenmp -c fk_openmp.f95
-
-fk_static.mod: fk_static.o fk_static.f95
-	$(F77) -fopenmp -c fk_static.f95
-
-layer.mod: layer.o layer.f95
-	$(F77) -fopenmp -c layer.f95
-
-%.mod: %.o %.f95
-	$(F77) -c $<
-
-
-fft.o: fft.c 
-	cc -c fft.c
-
-Complex.o: Complex.c Complex.h
-	cc -c Complex.c
-
-bessel.o: bessel.f
-	$(F77) -c bessel.f
-
-bessel.f: bessel.FF
-	cpp -traditional-cpp $< > $@
-
-fk_openmp.o: fk_openmp.f95
-	$(F77) -fopenmp -c fk_openmp.f95
-
-fk_static.o: fk_static.f95
-	$(F77) -fopenmp -c fk_static.f95
-
-layer.o: layer.f95
-	$(F77) -fopenmp -c layer.f95
-
 %.o: %.f95
 	$(F77) -c $<
+
+%.o: %.f
+	$(F77) -c $<
+
+
+%.o: %.c
+	cc -c $<
+
+# This generic rule handles the creation of .mod files implicitly.
+# Explicit module compilation rules are not necessary unless special compilation flags are needed.
 
 #clean:
 #	rm -f *.mod
 #	rm -f *.o
+#	rm -f $(MY_BIN)/green_bank_f95
+
+.PHONY: all clean

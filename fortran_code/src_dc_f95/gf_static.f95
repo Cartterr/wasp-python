@@ -106,7 +106,8 @@ program gf_static
 !
 ! input velocity model
 !
-   vel_model = 'vel_model.txt'
+   !vel_model = 'vel_model.txt'
+   vel_model = '/mnt/e/wasp-python/binaries_test/vel_model.txt'
    vel_model = trim(vel_model)
    call read_vel_model(vel_model)
    do ll=1,ndis

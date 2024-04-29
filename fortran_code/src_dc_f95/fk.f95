@@ -208,6 +208,7 @@ contains
 !	write(0, '(a)') 'Input x t0 output_name (2f10.3,1x,a)'
 !        read(*,'(2f10.3,1x,a)')x(ix),t0(ix),fout(ix)
       if (xmax .LT. x(ix)) xmax=x(ix)
+      write(*, '(A, I3, A, F10.5)') 'Debug: t0 Value at ix = ', ix, ' is: ', t0(ix)
    enddo
    dk = dk*pi/xmax   ! satisfies bouchon criteria
    if(dk.gt.0.03)dk=0.03d0
@@ -217,7 +218,7 @@ contains
 !*************** do wavenumber integration for each frequency
    z = real(pmax*nfft2*dw/kc, kind=4)  ! If precision loss is acceptable
    k = sqrt(z*z+1)
-   total = nfft2*(kc/dk)*0.5*(k+log(k+z)/z)
+   total = int(nfft2*(kc/dk)*0.5*(k+log(k+z)/z), kind=4)
 !   write(0,'(a3,f9.5,a8,f9.2,a8,i9)')'dk',dk,'kmax',kc,'N',total
    tenPerc = 0.1*total
    count = 0.
@@ -227,7 +228,7 @@ contains
    
 
 !   write(0,*)' start F-K computation, iw-range:',wc1,wc2,wc,nfft2
-   do j=wc1, nfft2                                                  ! start frequency loop
+   do j=wc1, nfft2, 1                                                  ! start frequency loop
       omega = (j-1)*dw
       w = cmplx(omega,-sigma,double)                             ! complex frequency
       w2 = w/twopi
@@ -244,9 +245,10 @@ contains
 !
 ! we replace direct summation by Kahan summation formula, which reduces numerical error
 !
+      ! write(*,*) '<fk.f95>: Kernel matrix U for current k:', u
       k = omega*pmin + 0.5d0*dk
       n = (sqrt(kc+(pmax*omega)**2)-k)/dk                           ! kmax
-      do i=1,n                                                      ! start k-loop
+      do i=1,n, 1                                                      ! start k-loop
          call kernel(k, u)
          do ix=1,nx
             ! z = k*x(ix)
@@ -292,29 +294,54 @@ contains
 !            summ(8,ix,j) = summ(8,ix,j) + u(2,3)*aj1 - nf2
 !            summ(9,ix,j) = summ(9,ix,j) + u(3,3)*aj1 - nf2
          enddo
-         k = k+dk
-         count=count+1
-!         if ( mod(count,tenPerc) .EQ. 0) then
-!            write(0,'(i4,a6)') int(100.*count/total)+1, '% done'
+         k = k + dk
+         count = count + 1
+!         Uncomment below to debug percentage completion
+!         if (mod(count, tenPerc) == 0) then
+!            write(0, '(i4, a6)') int(100.0 * count / total) + 1, '% done'
 !         endif
       enddo                                                 ! end of k-loop
       filter = const
-      if ( dynamic .AND. j.GT.wc ) then 
-         filter = 0.5d0*(1.d0+cos((j-wc)*taper))*filter
+      if (dynamic .AND. j < wc2) then
+         filter = 0.5d0 * (1.d0 + cos((wc2 - j) * pi / (wc2 - wc1))) * filter
       endif
-      if ( dynamic .AND. j.LT.wc2 ) then
-         filter = 0.5d0*(1.d0+cos((wc2-j)*pi/(wc2-wc1)))*filter
+      ! Debug filter values
+      if (filter < 0.d0 .OR. filter > 1.d0) then
+         !write(*, '(A, F10.5)') 'Warning: Filter value out of expected range: ', filter
+         filter = 1.d0  ! Reset filter to a neutral value if out of expected range
       endif
+
       do ix=1,nx
-         phi = omega*t0(ix)
-         att = filter*cmplx(cos(phi),sin(phi),double)
-         do l=1,nCom
-            summ(l,ix,j) = summ(l,ix,j)*att
-         enddo
+         !if (ix > 0 .AND. ix <= size(t0)) then
+         !   write(*, '(A, I3, A, F10.5, A, F10.5)') &
+         !   'fk.f95 - Accessing t0 with ix: ', ix, ' t0 Value: ', t0(ix)
+         !else
+         !   write(*, '(A, I3)') 'fk.f95 - Index out of bounds for t0: ', ix
+         !endif
+
+         !write(*, '(A, I3, A, F10.5, A, F10.5, A)') &
+         !'Debug at fk.f95 - Before applying filter: Index ', ix, ' t0 Value: ', &
+         !t0(ix), ' Filter: ', filter
+
+         !write(*, '(A, I3, A, E10.3, A, E10.3)') &
+         !'Before condition check - Index: ', ix, ' t0 Value: ', t0(ix), ' Filter: ', filter
+         if (t0(ix) /= 0.0d0) then
+            phi = omega * t0(ix) + pi / 2.0
+            att = filter * cmplx(cos(phi), sin(phi), kind=double)
+            do l = 1, nCom
+               summ(l, ix, j) = summ(l, ix, j) * att
+            enddo
+            !write(*, '(A, I3, A, F10.5, A, F10.5, A, F10.5)') &
+            !'Debug - After applying filter: Index ', ix, ' t0 Value: ', t0(ix), ' Phi: ', phi, ' Filter: ', filter
+         !else
+            !write(*, '(A, I3, A, F10.5, A, F10.5)') &
+            !'Debug at fk.f95 - Zero or undefined t0, skipping filter application: Index ', &
+            !ix, ' t0 Value: ', t0(ix), ' Filter: ', filter
+         endif
       enddo
-   enddo                            ! end of freqency loop
+   enddo      ! end of freqency loop
 !      write(0,'(i9,a40)') count,' 100% done, writing files ... '
-      
+
 !***************************************************************
 !*************** do inverse fourier transform
    dt = dt/smth
@@ -327,6 +354,8 @@ contains
 !          write(20,'(f5.1,9e11.3)')x(ix),(real(summ(ix,l,1)),l=1,nCom)
          do l=1,8
             green(1,l,ix) = real(summ(new_old(l),ix,1))
+            write(*, '(A, I3, A, F10.5)') &
+            'Writing to output: Component ', l, ' Value: ', green(1, l, ix)
          enddo
       else
          if (disp) then
@@ -380,7 +409,7 @@ contains
          endif
       endif
    enddo
-   deallocate(summ)     
+   deallocate(summ)
    end subroutine sub_bs_dc
 
 

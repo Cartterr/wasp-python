@@ -18,7 +18,6 @@ contains
    character(len=100) :: vel_model
    integer :: j
    vel_model = trim(vel_model)
-   print *, "Trying to open vel_model file at: ", trim(vel_model)
    open(1, file=vel_model, status='old')
    read(1, *) n_layers
    do j = 1, n_layers
@@ -35,7 +34,7 @@ contains
    endif
    end subroutine read_vel_model
 
-  
+
    subroutine update_model(depth_source, depth_rcv)
    implicit none
    real(kind=8), intent(in) :: depth_source, depth_rcv  ! Ensure 'depth_source' and 'depth_rcv' are declared as real(kind=8)
@@ -82,7 +81,7 @@ contains
       if(new_thick(rcv) .ge. 6371.)new_thick(rcv) = 0.0
       n_layers_new = n_layers_new + 1
    endif
- 
+
    src = 1
    do j = 1, n_layers
       if((depth2 .gt. depths(j)) .and. (depth2 .le. depths(j + 1))) then
@@ -128,7 +127,7 @@ contains
    implicit none
    real*8 :: temp(nlay, 6)
    integer :: i, j
-   
+
    do i=1, n_layers_new
       j = n_layers_new-i+1
       temp(i,1)=new_vel_p(i)
@@ -144,7 +143,7 @@ contains
    qqp(:)=temp(:,4)
    qqs(:)=temp(:,5)
    new_thick(:)=temp(:,6)
-    
+
    end subroutine flip_model
 
 
@@ -160,8 +159,8 @@ contains
    xi = new_vel_s*new_vel_s/(new_vel_p*new_vel_p)
    mu = new_dens*new_vel_s*new_vel_s
    end subroutine extra
-   
-   
+
+
    subroutine extra2(hs)
    implicit none
    real*8 :: hs

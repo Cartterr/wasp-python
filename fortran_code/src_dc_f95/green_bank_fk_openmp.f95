@@ -26,7 +26,8 @@ program green_bank_fk_openmp
    call getarg(1, input)
    disp = (input.eq.'cgps')
 
-   gf_file = 'Green_strong.txt'
+   !gf_file = 'Green_strong.txt'
+   gf_file = 'Green.in'
    if (disp) gf_file = 'Green_cgps.txt'
    call get_gf_data(gf_file, vel_model, gf_bank)
    npt=2**lnpt

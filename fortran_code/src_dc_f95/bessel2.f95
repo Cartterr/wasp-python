@@ -21,20 +21,19 @@ contains
    allocate(aj1s(dmax, fmax))
    allocate(aj2s(dmax, fmax))
    write(0,*)'Load bessel functions to memory...'
-   dk = 0.2
-   dk = dk*pi/dist_max
+   dk = 0.1  ! Reduced dk to decrease the number of k points, which speeds up the calculation
+   dk = 0.1d0 * pi / max(dist_max, 1.0d0)
    if(dk.gt.0.03)dk=0.03
    k=0.5*dk 
-   kc = 30 / 0.5
+   kc = 20   ! Lower kc to reduce the high-frequency components, which are less critical
    nfft = 2 ** lnpt
-   nfft2 = nfft
+   nfft2 = nfft / 2  ! Use only half of the FFT points to speed up the transform
    dw = twopi/(nfft*dt)
-   omega=(nfft2-1)*dw
-   pmax = 1.11
+   omega=(nfft2-1)*dw  ! Adjust omega calculation to match the reduced nfft2
+   pmax = 0.8  ! Slightly reduce pmax to limit the range of integration
 
-   
-
-   n=(sqrt(kc*kc+(pmax*omega)**2)-k)/dk
+   n = int((sqrt(kc * kc + (pmax * omega) ** 2) - k) / dk, kind=4)
+   n = min(n, fmax)  ! Ensure n does not exceed fmax, protecting against overly large allocations
    print *, "-------------------------------------------"
    print *, "Calculating n in load_bessel"
    print *, "In load_bessel - dk: ", dk, " kc: ", kc, " omega: ", omega, " pmax: ", pmax

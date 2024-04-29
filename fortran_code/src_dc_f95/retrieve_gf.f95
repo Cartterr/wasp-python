@@ -28,6 +28,7 @@ contains
    read(1, '(a)')gf_bank
    write(*,*)'GF bank name'
    write(*, *)gf_bank
+   write(*, *) 'Read t_cor value:', t_cor   ! New debug statement
    close(1)
    end subroutine get_gf_data
 

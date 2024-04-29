@@ -103,7 +103,8 @@ program get_strong_motion
 !
 !	Load vel. model into memory
 ! 
-   gf_file = 'Green_strong.txt'
+   ! gf_file = 'Green_strong.txt'
+   gf_file = 'Green.in'
    if (disp) gf_file = 'Green_cgps.txt'
    call get_gf_data(gf_file, vel_model, gf_bank)
    write(*,*)'Get velocity model...'
